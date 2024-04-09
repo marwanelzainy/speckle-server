@@ -1,35 +1,49 @@
 <template>
   <div>
-    <!-- PROJECT NAME > MODEL NAME title -->
-    <div v-if="step === 2 || step === 3" class="-mt-6 mb-4">
-      <div v-if="step === 2 && selectedProject && selectedAccountId">
-        <div class="h9 font-bold italic">{{ selectedProject.name }}</div>
-      </div>
-      <div v-if="step === 3">
-        <div class="h9 font-bold italic">
-          {{ `${selectedProject.name} > ${selectedModel.name}` }}
-        </div>
-      </div>
-      <hr class="mt-1" />
-    </div>
-    <!-- Stepper -->
-    <div class="mb-3 flex items-center justify-left space-x-2">
-      <CloudArrowDownIcon class="w-6 text-primary" />
-      <div
-        v-for="index in 3"
-        :key="index"
-        :class="`rounded-full h-2 w-2 ${
-          index === step ? 'bg-primary' : 'bg-foreground-2'
-        }`"
-      ></div>
-      <FormButton v-if="step > 1" size="xs" class="-ml-1" text @click="step--">
-        Back
-      </FormButton>
+    <!-- Close button -->
+    <div class="mb-4 -mt-6 flex flex-wrap items-center justify-left space-x-2">
       <div class="grow"></div>
       <button class="hover:text-primary transition" @click="emit('close')">
         <XMarkIcon class="w-4" />
       </button>
     </div>
+    <!-- Project - Model navigator/stepper -->
+    <div class="mb-4 -mt-4 flex flex-wrap items-center justify-left space-x-2">
+      <FormButton class="-mx-3" text @click="step = 1">
+        <CloudArrowDownIcon class="w-6 text-primary" />
+      </FormButton>
+      <div
+        v-if="(step === 2 || step === 3) && selectedProject && selectedAccountId"
+        class="flex items-center"
+      >
+        <FormButton v-if="step > 1" class="-mx-3 leading-normal" text @click="step = 2">
+          <div class="m-0 truncate max-w-[25vw]">
+            {{ selectedProject.name }}
+          </div>
+        </FormButton>
+        <p class="text-primary ml-2">|</p>
+      </div>
+
+      <div v-if="step === 3" class="flex items-center">
+        <FormButton v-if="step > 1" class="-mx-3 leading-normal" text @click="step = 3">
+          <div class="truncate max-w-[15vw]">
+            {{ selectedModel.name }}
+          </div>
+        </FormButton>
+        <p class="text-primary ml-2">|</p>
+      </div>
+      <div
+        v-for="index in 4 - step"
+        :key="index"
+        :class="`rounded-full h-2 w-2 ${
+          index === 1 ? 'bg-primary' : 'bg-foreground-2'
+        }`"
+      ></div>
+      <FormButton v-if="step > 1" size="xs" class="-ml-1" text @click="step--">
+        Back
+      </FormButton>
+    </div>
+    <!-- Select Project Wizard -->
     <div v-if="step === 1">
       <div>
         <div class="h5 font-bold">Select Project</div>

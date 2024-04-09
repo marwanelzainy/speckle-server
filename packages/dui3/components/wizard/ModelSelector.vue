@@ -170,7 +170,7 @@ const totalCount = computed(() => projectModelsResult.value?.project.models.tota
 const initialCount = ref(-1)
 
 watchOnce(projectModelsResult, (newObj) => {
-  console.log(newObj?.project.models.totalCount)
+  // console.log(newObj?.project.models.totalCount)
   if (newObj?.project.models.totalCount)
     initialCount.value = newObj.project.models.totalCount
 })
