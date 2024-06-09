@@ -4,13 +4,16 @@
       <NuxtPage />
     </NuxtLayout>
     <SingletonToastManager />
+    <SingletonAsyncDocStatus v-if="store.asyncDocProgressing" />
   </div>
 </template>
 <script setup lang="ts">
 import { useMixpanel } from '~/lib/core/composables/mixpanel'
 import { useConfigStore } from '~/store/config'
 import { useAccountStore, DUIAccount } from '~/store/accounts'
+import { useHostAppStore } from '~/store/hostApp'
 
+const store = useHostAppStore()
 const uiConfigStore = useConfigStore()
 const { isDarkTheme } = storeToRefs(uiConfigStore)
 

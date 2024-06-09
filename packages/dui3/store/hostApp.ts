@@ -22,11 +22,19 @@ export type ProjectModelGroup = {
   receivers: IReceiverModelCard[]
 }
 
+export type AsyncModelCardProgress = {
+  [modelCardId: string]: ModelCardProgress
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 export const useHostAppStore = defineStore('hostAppStore', () => {
   const app = useNuxtApp()
   const { trackEvent } = useMixpanel()
 
+  const asyncDocProgress = ref<AsyncModelCardProgress>({})
+  const asyncDocProgressing = computed(
+    () => Object.entries(asyncDocProgress.value).length > 0
+  )
   const currentNotification = ref<Nullable<ToastNotification>>(null)
   const showErrorDialog = ref<boolean>(false)
   const hostAppError = ref<Nullable<HostAppError>>(null)
@@ -238,6 +246,10 @@ export const useHostAppStore = defineStore('hostAppStore', () => {
     const model = documentModelStore.value.models.find(
       (m) => m.modelCardId === args.modelCardId
     ) as ISenderModelCard
+    if (!model) {
+      delete asyncDocProgress.value[args.modelCardId]
+      return
+    }
     model.latestCreatedVersionId = args.versionId
     model.report = args.sendConversionResults
     model.progress = undefined
@@ -305,6 +317,16 @@ export const useHostAppStore = defineStore('hostAppStore', () => {
     const model = documentModelStore.value.models.find(
       (m) => m.modelCardId === args.modelCardId
     ) as IModelCard
+    if (!model) {
+      if (args.progress) {
+        asyncDocProgress.value = {
+          ...asyncDocProgress.value,
+          [args.modelCardId]: args.progress
+        }
+      }
+      return
+    }
+    delete asyncDocProgress.value[args.modelCardId]
     model.progress = args.progress
   }
 
@@ -382,6 +404,8 @@ export const useHostAppStore = defineStore('hostAppStore', () => {
     connectorVersion,
     documentInfo,
     projectModelGroups,
+    asyncDocProgress,
+    asyncDocProgressing,
     models,
     sendFilters,
     selectionFilter,
