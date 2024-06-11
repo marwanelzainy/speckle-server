@@ -1,6 +1,7 @@
 import {
   DocumentInfo,
-  DocumentModelStore
+  DocumentModelStore,
+  DocumentModelStoreCache
 } from '~/lib/bindings/definitions/IBasicConnectorBinding'
 import { IModelCard, ModelCardProgress } from 'lib/models/card'
 import { useMixpanel } from '~/lib/core/composables/mixpanel'
@@ -22,8 +23,14 @@ export type ProjectModelGroup = {
   receivers: IReceiverModelCard[]
 }
 
+export type ModelCardProgressWithDocumentInfo = {
+  modelCardId: string
+  modelCardProgress: ModelCardProgress
+  documentInfo?: DocumentInfo
+}
+
 export type AsyncModelCardProgress = {
-  [modelCardId: string]: ModelCardProgress
+  [modelCardId: string]: ModelCardProgressWithDocumentInfo
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -31,10 +38,9 @@ export const useHostAppStore = defineStore('hostAppStore', () => {
   const app = useNuxtApp()
   const { trackEvent } = useMixpanel()
 
-  const asyncDocProgress = ref<AsyncModelCardProgress>({})
-  const asyncDocProgressing = computed(
-    () => Object.entries(asyncDocProgress.value).length > 0
-  )
+  const asyncDocProgress = ref<ModelCardProgressWithDocumentInfo[]>([])
+  const asyncDocProgressing = computed(() => asyncDocProgress.value.length > 0)
+
   const currentNotification = ref<Nullable<ToastNotification>>(null)
   const showErrorDialog = ref<boolean>(false)
   const hostAppError = ref<Nullable<HostAppError>>(null)
@@ -43,7 +49,13 @@ export const useHostAppStore = defineStore('hostAppStore', () => {
   const hostAppVersion = ref<string>()
   const connectorVersion = ref<string>()
   const documentInfo = ref<DocumentInfo>()
-  const documentModelStore = ref<DocumentModelStore>({ models: [] })
+  const documentModelStore = ref<DocumentModelStore>({
+    models: []
+  })
+
+  const documentModelStoreCache = ref<DocumentModelStoreCache>({
+    modelCardsDocumentInfo: []
+  })
 
   const dismissNotification = () => {
     currentNotification.value = null
@@ -96,6 +108,11 @@ export const useHostAppStore = defineStore('hostAppStore', () => {
   const addModel = async (model: IModelCard) => {
     await app.$baseBinding.addModel(model)
     documentModelStore.value.models.push(model)
+
+    documentModelStoreCache.value.modelCardsDocumentInfo.push({
+      modelCardId: model.modelCardId,
+      documentInfo: documentInfo.value
+    })
   }
 
   /**
@@ -247,7 +264,9 @@ export const useHostAppStore = defineStore('hostAppStore', () => {
       (m) => m.modelCardId === args.modelCardId
     ) as ISenderModelCard
     if (!model) {
-      delete asyncDocProgress.value[args.modelCardId]
+      asyncDocProgress.value = asyncDocProgress.value.filter(
+        (p) => p.modelCardId !== args.modelCardId
+      )
       return
     }
     model.latestCreatedVersionId = args.versionId
@@ -319,14 +338,27 @@ export const useHostAppStore = defineStore('hostAppStore', () => {
     ) as IModelCard
     if (!model) {
       if (args.progress) {
-        asyncDocProgress.value = {
-          ...asyncDocProgress.value,
-          [args.modelCardId]: args.progress
+        const asyncDocProgressModel = asyncDocProgress.value.find(
+          (m) => m.modelCardId === args.modelCardId
+        ) as ModelCardProgressWithDocumentInfo
+
+        if (asyncDocProgressModel) {
+          asyncDocProgressModel.modelCardProgress = args.progress
+        } else {
+          asyncDocProgress.value.push({
+            modelCardId: args.modelCardId,
+            modelCardProgress: args.progress,
+            documentInfo: documentModelStoreCache.value.modelCardsDocumentInfo.find(
+              (c) => c.modelCardId === args.modelCardId
+            )?.documentInfo
+          })
         }
       }
       return
     }
-    delete asyncDocProgress.value[args.modelCardId]
+    asyncDocProgress.value = asyncDocProgress.value.filter(
+      (p) => p.modelCardId !== args.modelCardId
+    )
     model.progress = args.progress
   }
 

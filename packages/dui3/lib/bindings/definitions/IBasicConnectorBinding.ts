@@ -28,8 +28,17 @@ export interface IBasicConnectorBindingHostEvents extends IModelCardSharedEvents
   documentChanged: () => void
 }
 
+export type DocumentInfoByModelCardId = {
+  modelCardId: string
+  documentInfo?: DocumentInfo
+}
+
 export type DocumentModelStore = {
   models: IModelCard[]
+}
+
+export type DocumentModelStoreCache = {
+  modelCardsDocumentInfo: DocumentInfoByModelCardId[]
 }
 
 export type DocumentInfo = {
