@@ -20,6 +20,8 @@ import { type MaterialOptions } from '../materials/MaterialOptions'
 import { type TreeNode } from '../tree/WorldTree'
 import { CameraController } from './CameraController'
 
+// TODO: Left click select only and Unselect empty args to unselect all
+
 export interface SelectionExtensionOptions {
   selectionMaterialData: RenderMaterial & DisplayStyle & MaterialOptions
   hoverMaterialData?: RenderMaterial & DisplayStyle & MaterialOptions
